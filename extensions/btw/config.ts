@@ -3,21 +3,17 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 
 export type BtwSettings = {
-  quakeKeys: string[]; // forward-looking; M1 binds a fixed Ctrl+Alt+B (see ui.ts)
-  maxTokens: number;
-  deepMaxTokens: number; // final-answer cap for deep asks only; quick keeps maxTokens
-  cacheRetention: "short";
-  deepToolAllowlist: string[];
-  deepToolCallBudget: number;
+  answerMaxTokens: number; // caps every /btw answer
+  refineMaxTokens: number; // caps only the refine-on-promote pass
+  toolAllowlist: string[];
+  toolCallBudget: number;
 };
 
 const DEFAULTS: BtwSettings = {
-  quakeKeys: ["`"],
-  maxTokens: 1024,
-  deepMaxTokens: 4096,
-  cacheRetention: "short",
-  deepToolAllowlist: ["read", "grep", "find", "ls"],
-  deepToolCallBudget: 8,
+  answerMaxTokens: 4096,
+  refineMaxTokens: 1024,
+  toolAllowlist: ["read", "grep", "find", "ls"],
+  toolCallBudget: 8,
 };
 
 function readJsonFile(path: string): Partial<BtwSettings> {
@@ -43,29 +39,23 @@ export function getConfig(): BtwSettings {
   const merged: BtwSettings = { ...DEFAULTS, ...fileCfg };
   const env = process.env;
 
-  if (env.BTW_QUAKE_KEYS) {
-    merged.quakeKeys = env.BTW_QUAKE_KEYS.split(",").map((s) => s.trim()).filter(Boolean);
+  if (env.BTW_ANSWER_MAX_TOKENS && Number.isFinite(Number(env.BTW_ANSWER_MAX_TOKENS))) {
+    merged.answerMaxTokens = Number(env.BTW_ANSWER_MAX_TOKENS);
   }
-  if (env.BTW_MAX_TOKENS && Number.isFinite(Number(env.BTW_MAX_TOKENS))) {
-    merged.maxTokens = Number(env.BTW_MAX_TOKENS);
+  if (env.BTW_REFINE_MAX_TOKENS && Number.isFinite(Number(env.BTW_REFINE_MAX_TOKENS))) {
+    merged.refineMaxTokens = Number(env.BTW_REFINE_MAX_TOKENS);
   }
-  if (env.BTW_DEEP_MAX_TOKENS && Number.isFinite(Number(env.BTW_DEEP_MAX_TOKENS))) {
-    merged.deepMaxTokens = Number(env.BTW_DEEP_MAX_TOKENS);
-  }
-  if (env.BTW_DEEP_BUDGET && Number.isFinite(Number(env.BTW_DEEP_BUDGET))) {
-    merged.deepToolCallBudget = Number(env.BTW_DEEP_BUDGET);
+  if (env.BTW_TOOL_BUDGET && Number.isFinite(Number(env.BTW_TOOL_BUDGET))) {
+    merged.toolCallBudget = Number(env.BTW_TOOL_BUDGET);
   }
 
   // Sanitize: a malformed btw.json/env must never yield NaN/0/wrong-typed settings that
   // silently defeat the tool budget cap (three termination guards in runSide) or the
   // answer-length cap. Any invalid field falls back to its default.
-  const quakeKeys = stringArray(merged.quakeKeys)?.filter(Boolean);
   return {
-    quakeKeys: quakeKeys && quakeKeys.length ? quakeKeys : DEFAULTS.quakeKeys,
-    maxTokens: posInt(merged.maxTokens) ?? DEFAULTS.maxTokens,
-    deepMaxTokens: posInt(merged.deepMaxTokens) ?? DEFAULTS.deepMaxTokens,
-    cacheRetention: "short", // fixed by design (§6.1)
-    deepToolAllowlist: stringArray(merged.deepToolAllowlist) ?? DEFAULTS.deepToolAllowlist,
-    deepToolCallBudget: posInt(merged.deepToolCallBudget) ?? DEFAULTS.deepToolCallBudget,
+    answerMaxTokens: posInt(merged.answerMaxTokens) ?? DEFAULTS.answerMaxTokens,
+    refineMaxTokens: posInt(merged.refineMaxTokens) ?? DEFAULTS.refineMaxTokens,
+    toolAllowlist: stringArray(merged.toolAllowlist) ?? DEFAULTS.toolAllowlist,
+    toolCallBudget: posInt(merged.toolCallBudget) ?? DEFAULTS.toolCallBudget,
   };
 }

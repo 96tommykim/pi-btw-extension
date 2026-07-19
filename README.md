@@ -69,24 +69,19 @@ Environment variables win, then `~/.pi/agent/btw.json`, then these defaults:
 
 | Setting | Default | Environment variable | Notes |
 |---|---|---|---|
-| `deepMaxTokens` | `4096` | `BTW_DEEP_MAX_TOKENS` | Caps every answer |
-| `maxTokens` | `1024` | `BTW_MAX_TOKENS` | Caps only the `r` summary |
-| `deepToolCallBudget` | `8` | `BTW_DEEP_BUDGET` | Tool calls per ask before it wraps up |
-| `deepToolAllowlist` | `["read","grep","find","ls"]` | — | Can only narrow this list, never extend it |
+| `answerMaxTokens` | `4096` | `BTW_ANSWER_MAX_TOKENS` | Caps every answer |
+| `refineMaxTokens` | `1024` | `BTW_REFINE_MAX_TOKENS` | Caps only the `r` summary |
+| `toolCallBudget` | `8` | `BTW_TOOL_BUDGET` | Tool calls per ask before it wraps up |
+| `toolAllowlist` | `["read","grep","find","ls"]` | None | Can only narrow this list, never extend it |
 
 ```json
 {
-  "deepMaxTokens": 8192,
-  "deepToolCallBudget": 4
+  "answerMaxTokens": 8192,
+  "toolCallBudget": 4
 }
 ```
 
-The `deep*` names are older than the current behavior — there used to be a separate deep mode — and
-are kept so existing config files keep working.
-
-Two settings are accepted but do nothing: `quakeKeys` (the overlay shortcut is fixed) and
-`cacheRetention` (always `short`). They are parsed rather than rejected so older config files do
-not break.
+Unknown keys are ignored, so an older `btw.json` keeps loading.
 
 ## Where threads live
 

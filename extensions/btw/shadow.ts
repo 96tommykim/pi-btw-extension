@@ -54,10 +54,10 @@ export async function runSide(
     createFindToolDefinition(cwd),
     createLsToolDefinition(cwd),
   ];
-  const allowed = allDefs.filter((t) => opts.settings.deepToolAllowlist.includes(t.name));
+  const allowed = allDefs.filter((t) => opts.settings.toolAllowlist.includes(t.name));
   const defByName = new Map(allowed.map((t) => [t.name, t] as const));
   const tools = allowed.map((t) => ({ name: t.name, description: t.description, parameters: t.parameters }));
-  const budget = opts.settings.deepToolCallBudget;
+  const budget = opts.settings.toolCallBudget;
 
   const messages: Message[] = [...opts.prefix, buildSideQuestion(opts.question, opts.tail)];
   const toolsUsed = new Set<string>();
@@ -79,8 +79,8 @@ export async function runSide(
           apiKey: auth.apiKey,
           headers: auth.headers,
           env: auth.env,
-          maxTokens: opts.settings.deepMaxTokens,
-          cacheRetention: opts.settings.cacheRetention,
+          maxTokens: opts.settings.answerMaxTokens,
+          cacheRetention: "short",
           signal: opts.signal,
         },
       );
@@ -173,8 +173,8 @@ export async function runRefine(
         apiKey: auth.apiKey,
         headers: auth.headers,
         env: auth.env,
-        maxTokens: opts.settings.maxTokens,
-        cacheRetention: opts.settings.cacheRetention,
+        maxTokens: opts.settings.refineMaxTokens,
+        cacheRetention: "short",
         signal: opts.signal,
       },
     );
