@@ -21,6 +21,7 @@ export interface ThreadStore {
   getActive(): BtwThread | null;
   setActive(id: string): void;
   newThread(): BtwThread;
+  deleteThread(id: string): void;
   append(threadId: string, entry: BtwEntry): void;
   tailDigest(threadId: string): string;
   markPromoted(threadId: string, entryId: string): void;
@@ -60,14 +61,15 @@ export function createThreadStore(): ThreadStore {
 
   // Every mutation rewrites the whole per-project file. It is small, the write is
   // atomic (tmp+rename), and JSON.stringify runs synchronously inside the save,
-  // so the V2.1 clone-at-record-time dance is unnecessary here.
+  // so no copy-on-write snapshotting is needed to guard against concurrent edits.
   const persist = () => {
     storePath ??= resolveStorePath(process.cwd());
     try {
       saveStateFile(storePath, state);
     } catch {
       // A read-only/full home must never crash the session: in-memory state is
-      // already updated, so threads just degrade to session-scoped (V1 behavior).
+      // already updated, so threads just degrade to session-scoped (held in
+      // memory, not persisted across sessions).
       notePersistFailure();
     }
   };
@@ -88,8 +90,9 @@ export function createThreadStore(): ThreadStore {
       if (fromFile) {
         state = fromFile;
       } else {
-        // Migration: pre-V2b sessions persisted threads as session custom
-        // entries (btw-state/btw-delta). Replay once and seed the file.
+        // Migration: earlier sessions persisted threads as session custom
+        // entries (btw-state/btw-delta) rather than a file. Replay those once
+        // and seed the file so later loads take the fast path above.
         state = reconstructFromEntries(ctx.sessionManager.getEntries()).state;
         if (state.threads.length) {
           try {
@@ -121,6 +124,15 @@ export function createThreadStore(): ThreadStore {
       state.activeThreadId = t.id;
       persist();
       return t;
+    },
+    deleteThread(id) {
+      const idx = state.threads.findIndex((t) => t.id === id);
+      if (idx === -1) return;
+      state.threads.splice(idx, 1);
+      // Dropping the active thread clears the pointer; the overlay decides what
+      // to show next rather than the store silently picking a replacement.
+      if (state.activeThreadId === id) delete state.activeThreadId;
+      persist();
     },
     append(threadId, entry) {
       const t = find(threadId);

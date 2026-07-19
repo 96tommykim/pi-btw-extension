@@ -6,7 +6,7 @@ import type { BtwState } from "./threads";
 
 /**
  * Cross-session thread store: one JSON file per project (keyed by cwd hash)
- * under the pi agent home. BTW_SPEC §6.2 (V2b).
+ * under the pi agent home in ~/.pi/agent/btw/.
  */
 export function resolveStorePath(cwd: string, home: string = homedir()): string {
   const key = createHash("sha256").update(cwd).digest("hex").slice(0, 12);

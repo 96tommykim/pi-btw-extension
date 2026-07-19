@@ -74,8 +74,22 @@ class BtwOverlay implements Component {
       },
       onNew: () => this.newThread(),
       onClose: () => {
-        this.view = "thread";
-        this.tui.requestRender();
+        // Deleting the active thread clears it; there is nothing to return to,
+        // so Esc closes the overlay instead of reopening a dead thread view.
+        if (this.threads.getActive()) {
+          this.view = "thread";
+          this.tui.requestRender();
+        } else {
+          this.close();
+        }
+      },
+      onDelete: (id) => {
+        // A running ask can only belong to the active thread; if that is the
+        // one being deleted, abort it so its result cannot land in a ghost.
+        const active = this.threads.getActive();
+        if (this.controller && active && active.id === id) this.controller.abort();
+        this.threads.deleteThread(id);
+        this.showList();
       },
     });
     this.view = "list";
@@ -292,6 +306,14 @@ export async function openOverlay(
     return;
   }
   const q = initialQuestion?.trim();
+  // On a plain reopen (no question), if nothing is active but threads remain
+  // (for example the active thread was just deleted), land on the most recent
+  // one rather than a blank view. threads are stored oldest-first. A `/btw
+  // <question>` reopen is left alone: it intentionally starts a fresh thread.
+  if (!q && !threads.getActive()) {
+    const all = threads.listThreads();
+    if (all.length) threads.setActive(all[all.length - 1].id);
+  }
   await ctx.ui.custom<void>(
     (tui, theme, _kb, done) => {
       const overlay = new BtwOverlay(ctx, tui, theme, threads, grounding, done, onPromote);

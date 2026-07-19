@@ -147,7 +147,7 @@ Rules:
 
 export type QuickResult = { text: string; aborted: boolean; error?: string };
 
-/** One quick pass that rewrites a promoted Q/A into a main-actionable note (§11 refine-on-promote). */
+/** One quick pass that rewrites a shared Q/A into a main-actionable note. */
 export async function runRefine(
   ctx: ExtensionContext,
   opts: { prefix: Message[]; question: string; answer: string; settings: BtwSettings; signal: AbortSignal },
