@@ -41,8 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - 2026-07-19
 
-First public release. Extracted from a private harness repository, where the
-feature was developed and hardened through five milestones.
+First public release. Adds multi-threaded side questions grounded in the live
+session, persistent per-project thread storage, and promote-to-main sharing.
 
 ### Added
 

@@ -2,7 +2,7 @@ import assert from "node:assert";
 import { test } from "node:test";
 import { buildMultiPromoteNote, buildPromoteNote, buildRefinedPromoteNote } from "../lib/promote.ts";
 
-test("single note keeps the V1 self-describing format", () => {
+test("single note uses the self-describing shared-answer format", () => {
   assert.equal(
     buildPromoteNote("why?", "because."),
     "[/btw note: the user asked this as a side question and chose to share the answer with you]\nQ: why?\nA: because.",

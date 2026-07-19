@@ -18,9 +18,9 @@ export function registerGrounding(pi: ExtensionAPI): Grounding {
   return {
     getGroundingPrefix(ctx) {
       if (latestPrefix.length > 0) return latestPrefix;
-      // BTW_SPEC §5.1 step 2: before the first `context` event of a (resumed)
-      // session, rebuild the prefix from persisted history so /btw is never
-      // sent ungrounded. Not cached: the live listener takes over on turn 1.
+      // Before the first `context` event of a (resumed) session, rebuild the
+      // prefix from persisted history so /btw is never sent ungrounded. Not
+      // cached: the live listener takes over on turn 1.
       try {
         const sm = ctx.sessionManager;
         return convertToLlm(buildSessionContext(sm.getEntries(), sm.getLeafId()).messages);
