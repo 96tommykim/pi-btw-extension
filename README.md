@@ -130,18 +130,6 @@ One trap worth knowing: **do not add `extensions/btw/index.ts`.** pi scans `exte
 deep and treats a subdirectory as an extension only when it contains an `index.ts`. Add one and
 `/btw` gets registered twice.
 
-## Prior art
-
-| Project | What it does | Relation |
-|---|---|---|
-| [Fatih0234/btw](https://github.com/Fatih0234/btw) | Cache-warm shadow side questions | Where the cache-warm approach comes from |
-| [peterp/pi-sidequest](https://github.com/peterp/pi-sidequest) | Threaded, persistent, tool-capable side channel | Where threads, persistence, and the overlay come from |
-| [pi-psst](https://www.npmjs.com/package/pi-psst) | Ephemeral side questions | The same idea, kept simpler |
-
-This extension combines those ideas. It keeps side questions threaded and cache-warm, reads files
-when needed, and uses the latest session context. Nothing goes back to the main conversation until
-you share it.
-
 ## License
 
 MIT
