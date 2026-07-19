@@ -40,8 +40,8 @@ main conversation is untouched.
 
 With no argument, `/btw` reopens the last thread instead of prompting for a new question.
 
-The Quake key (default backtick `` ` ``) toggles the overlay open and closed without going
-through the command palette.
+`Ctrl+Alt+B` (`Ctrl+Cmd+B` on macOS) toggles the overlay open and closed without going through
+the command palette. This shortcut is fixed and not currently configurable.
 
 Inside the overlay you can navigate between threads and scroll a thread's history. To share an
 answer with the main agent, press `Ctrl+P` to arm select mode:
@@ -73,7 +73,7 @@ Settings are resolved with **environment variables taking precedence**, falling 
 
 | Setting | Default | Environment variable | Notes |
 |---|---|---|---|
-| `quakeKeys` | ``["`"]`` | `BTW_QUAKE_KEYS` | Comma-separated list of keys that toggle the overlay |
+| `quakeKeys` | ``["`"]`` | `BTW_QUAKE_KEYS` | **Accepted but not applied.** The value is parsed and validated like any other setting, but nothing in the extension reads it — the overlay shortcut is fixed at `Ctrl+Alt+B` (`Ctrl+Cmd+B` on macOS) and cannot be changed by this setting. Setting it has no effect on any key binding. |
 | `maxTokens` | `1024` | `BTW_MAX_TOKENS` | Caps only the refine-on-promote pass |
 | `deepMaxTokens` | `4096` | `BTW_DEEP_MAX_TOKENS` | Caps the answer for every `/btw` ask |
 | `deepToolAllowlist` | `["read","grep","find","ls"]` | — | Read-only tools the side agent may call |
@@ -84,6 +84,11 @@ needs to — there is no longer a separate "deep" trigger. The names are kept as
 compatibility with existing configuration files. `deepMaxTokens` caps the answer for every ask;
 `maxTokens` only caps the length of the refined summary produced when you press `r` in select
 mode.
+
+`quakeKeys` (and its `BTW_QUAKE_KEYS` environment variable) are kept in the table because a
+`btw.json` written for an earlier design, or an environment with `BTW_QUAKE_KEYS` set, is silently
+accepted rather than rejected — but the value does nothing. If you were relying on it to remap the
+overlay key, it never worked; the binding has always been the fixed `Ctrl+Alt+B` shown above.
 
 ## Where your threads live
 
