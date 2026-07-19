@@ -40,11 +40,14 @@ main conversation is untouched.
 
 With no argument, `/btw` reopens the last thread instead of prompting for a new question.
 
-`Ctrl+Alt+B` (`Ctrl+Cmd+B` on macOS) toggles the overlay open and closed without going through
-the command palette. This shortcut is fixed and not currently configurable.
+`Ctrl+Alt+B` toggles the overlay open and closed without going through the command palette. This
+shortcut is fixed and not currently configurable. On macOS the chord is **Ctrl+Option+B**;
+terminals that do not send Option as Meta (Terminal.app in its default configuration) will not
+deliver it — those users should use the `/btw` command instead.
 
-Inside the overlay you can navigate between threads and scroll a thread's history. To share an
-answer with the main agent, press `Ctrl+P` to arm select mode:
+Inside the overlay you can navigate between threads and scroll a thread's history. Press `Ctrl+L`
+to open the thread list and `Ctrl+N` to start a new thread. To share an answer with the main
+agent, press `Ctrl+P` to arm select mode:
 
 | Key | Action |
 |---|---|
@@ -73,10 +76,11 @@ Settings are resolved with **environment variables taking precedence**, falling 
 
 | Setting | Default | Environment variable | Notes |
 |---|---|---|---|
-| `quakeKeys` | ``["`"]`` | `BTW_QUAKE_KEYS` | **Accepted but not applied.** The value is parsed and validated like any other setting, but nothing in the extension reads it — the overlay shortcut is fixed at `Ctrl+Alt+B` (`Ctrl+Cmd+B` on macOS) and cannot be changed by this setting. Setting it has no effect on any key binding. |
+| `quakeKeys` | ``["`"]`` | `BTW_QUAKE_KEYS` | **Accepted but not applied.** The value is parsed and validated like any other setting, but nothing in the extension reads it — the overlay shortcut is fixed at `Ctrl+Alt+B` (`Ctrl+Option+B` on macOS) and cannot be changed by this setting. Setting it has no effect on any key binding. |
 | `maxTokens` | `1024` | `BTW_MAX_TOKENS` | Caps only the refine-on-promote pass |
 | `deepMaxTokens` | `4096` | `BTW_DEEP_MAX_TOKENS` | Caps the answer for every `/btw` ask |
-| `deepToolAllowlist` | `["read","grep","find","ls"]` | — | Read-only tools the side agent may call |
+| `cacheRetention` | `"short"` | — | **Accepted but not applied.** The value is merged in from config like any other setting, but the extension always uses `"short"` regardless of what is set. |
+| `deepToolAllowlist` | `["read","grep","find","ls"]` | — | Read-only tools the side agent may call. **Filter-only:** this can only narrow the fixed set of four built-in read-only tools, never widen it — an unrecognized name is silently ignored, and there is no way to grant the side agent a tool outside that set. |
 | `deepToolCallBudget` | `8` | `BTW_DEEP_BUDGET` | Maximum tool calls per ask before a partial answer is returned |
 
 The `deep*` names predate the current automatic mode, where every `/btw` ask can call tools if it
@@ -88,7 +92,8 @@ mode.
 `quakeKeys` (and its `BTW_QUAKE_KEYS` environment variable) are kept in the table because a
 `btw.json` written for an earlier design, or an environment with `BTW_QUAKE_KEYS` set, is silently
 accepted rather than rejected — but the value does nothing. If you were relying on it to remap the
-overlay key, it never worked; the binding has always been the fixed `Ctrl+Alt+B` shown above.
+overlay key, it never worked; the binding has always been the fixed `Ctrl+Alt+B` shown above
+(`Ctrl+Option+B` on macOS).
 
 ## Where your threads live
 
@@ -99,12 +104,10 @@ Threads are stored outside the pi session, one JSON file per project, at:
 ```
 
 The file is rewritten atomically on every change (write to a temp file, then rename), so a crash
-mid-write cannot corrupt it. This gives threads two properties worth knowing about:
+mid-write cannot corrupt it. This gives threads one property worth knowing about:
 
 - If you have two pi sessions open in the same project at once, the store is last-write-wins —
   the two sessions do not merge their writes.
-- If a project already had `/btw` threads before this store file existed, those older threads
-  are not merged into it; the store starts fresh going forward.
 
 ## Safety
 
@@ -147,7 +150,7 @@ pi --no-extensions -e "$PWD" -p 'reply with exactly: ok'
 |---|---|---|
 | [Fatih0234/btw](https://github.com/Fatih0234/btw) | Cache-warm shadow side questions | Source of the cache-warm approach this extension builds on |
 | [peterp/pi-sidequest](https://github.com/peterp/pi-sidequest) | Threaded, persistent, tool-capable side channel with a Quake overlay | Source of the threading, persistence, and overlay ideas |
-| [pi-psst](https://www.npmjs.com/package/pi-psst) | Ephemeral side questions modeled on Claude Code's `/btw` | Confirms the side-channel pattern this extension follows |
+| [pi-psst](https://www.npmjs.com/package/pi-psst) | Ephemeral side questions | Confirms the side-channel pattern this extension follows |
 
 This extension combines the cache-warm shadow core with persistent threads, on-demand read-only
 tools, live (not snapshotted) grounding, and opt-in promote-to-main — a combination none of the
