@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { test } from "node:test";
-import { applyDelta, emptyState, reconstructFromEntries } from "../extensions/btw/replay.ts";
+import { applyDelta, emptyState, reconstructFromEntries } from "../lib/replay.ts";
 
 const entry = (id: string, q = "q", a = "a") => ({
   id, mode: "quick" as const, question: q, answer: a,

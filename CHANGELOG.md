@@ -5,6 +5,29 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-07-20
+
+### Changed
+
+- The package entry point moved to `index.ts` at the package root, and the
+  modules behind it moved from `extensions/btw/` to `lib/`. pi builds the
+  startup extension label from the entry file's name and shows the package name
+  alone only when that name is `index`, so the old layout listed this package as
+  `pi-btw-extension:btw.ts` while every other package showed its bare name. It
+  now reads `pi-btw-extension`. Nothing about how the extension is installed or
+  used changes. Consumers import the package, not its internal paths.
+- The thread store is now written owner-only: store files with mode `0600`, and
+  mode `0700` for any directory btw has to create on the way to
+  `~/.pi/agent/btw/`. The store holds conversation text, so a umask that left it
+  group and world readable was wrong. Directories that already exist keep
+  whatever mode they have; only the files inside them are tightened, which is
+  where the content actually is.
+
+### Added
+
+- A GitHub Actions workflow that runs `npm run typecheck` and `npm test` on
+  every push and pull request.
+
 ## [0.1.1] - 2026-07-20
 
 ### Changed

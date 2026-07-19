@@ -1,9 +1,9 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { Key } from "@earendil-works/pi-tui";
-import { registerGrounding } from "./btw/context";
-import { sendPromote } from "./btw/promote";
-import { createThreadStore } from "./btw/threads";
-import { openOverlay } from "./btw/ui";
+import { registerGrounding } from "./lib/context";
+import { sendPromote } from "./lib/promote";
+import { createThreadStore } from "./lib/threads";
+import { openOverlay } from "./lib/ui";
 
 export default function (pi: ExtensionAPI) {
   const grounding = registerGrounding(pi);

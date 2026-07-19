@@ -1,6 +1,6 @@
 {
   "name": "pi-btw-extension",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Ask a side question grounded in your live pi session, without polluting the main conversation.",
   "license": "MIT",
   "type": "module",
@@ -24,11 +24,12 @@
   },
   "pi": {
     "extensions": [
-      "./extensions"
+      "./index.ts"
     ]
   },
   "files": [
-    "extensions",
+    "index.ts",
+    "lib",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
