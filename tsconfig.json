@@ -9,5 +9,5 @@
     "allowImportingTsExtensions": true,
     "skipLibCheck": true
   },
-  "include": ["extensions/btw.ts", "extensions/btw/**/*.ts", "tests/**/*.ts"]
+  "include": ["index.ts", "lib/**/*.ts", "tests/**/*.ts"]
 }

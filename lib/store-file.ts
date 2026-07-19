@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import type { BtwState } from "./threads";
@@ -30,11 +30,23 @@ export function loadStateFile(path: string): BtwState | null {
   }
 }
 
-/** Atomic write (tmp + rename) so a crash mid-write never corrupts the store. */
+/**
+ * Atomic write (tmp + rename) so a crash mid-write never corrupts the store.
+ *
+ * The store holds conversation text, so it is written owner-only. Two details
+ * make that airtight rather than approximate. The temp file is removed first,
+ * because `mode` applies only when a file is created: writing into a
+ * crash-orphaned `.tmp` left at 0644 by an earlier version would otherwise put
+ * the whole conversation in a world-readable file for the length of the write
+ * and then rename those bits onto the store. The chmod then covers the umask,
+ * which `mode` is subject to and chmod is not.
+ */
 export function saveStateFile(path: string, state: BtwState): void {
-  mkdirSync(dirname(path), { recursive: true });
+  mkdirSync(dirname(path), { recursive: true, mode: 0o700 });
   const tmp = `${path}.tmp`;
-  writeFileSync(tmp, JSON.stringify(state));
+  rmSync(tmp, { force: true });
+  writeFileSync(tmp, JSON.stringify(state), { mode: 0o600 });
+  chmodSync(tmp, 0o600);
   renameSync(tmp, path);
 }
 

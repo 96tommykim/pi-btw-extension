@@ -1,9 +1,9 @@
 import assert from "node:assert";
-import { existsSync, mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, sep } from "node:path";
 import { test } from "node:test";
-import { cleanupOrphanTmp, loadStateFile, resolveStorePath, saveStateFile } from "../extensions/btw/store-file.ts";
+import { cleanupOrphanTmp, loadStateFile, resolveStorePath, saveStateFile } from "../lib/store-file.ts";
 
 const dir = mkdtempSync(join(tmpdir(), "btw-store-"));
 const state = {
@@ -30,6 +30,24 @@ test("save creates missing parent directories", () => {
   const p = join(dir, "nested", "deeper", "s.json");
   saveStateFile(p, state);
   assert.deepEqual(loadStateFile(p), state);
+});
+
+test("save writes the store owner-only, even over a world-readable orphan tmp", () => {
+  const p = join(dir, "perms", "s.json");
+  saveStateFile(p, state);
+  assert.equal(statSync(p).mode & 0o777, 0o600);
+  assert.equal(statSync(join(dir, "perms")).mode & 0o777, 0o700);
+
+  // A crash-orphaned tmp left world-readable by an earlier version must not
+  // derail the save: the result is still owner-only, and the tmp is gone.
+  // (saveStateFile removes the tmp before writing so the conversation never
+  // occupies a 0644 file mid-write; that window is not observable after the
+  // fact, so it is guarded by the rmSync in the code rather than asserted here.)
+  writeFileSync(`${p}.tmp`, "stale", { mode: 0o644 });
+  saveStateFile(p, { ...state, activeThreadId: "te2" });
+  assert.equal(statSync(p).mode & 0o777, 0o600);
+  assert.equal(existsSync(`${p}.tmp`), false);
+  assert.equal(loadStateFile(p)?.activeThreadId, "te2");
 });
 
 test("missing, corrupt, and foreign-shape files load as null", () => {

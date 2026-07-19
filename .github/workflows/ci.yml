@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 22.19 is the floor declared in engines. 24 is the current release line.
+        node: ["22.19.0", "24"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # This package has no dependencies of its own and is never built. The
+      # typecheck resolves @earendil-works/* and @types/node out of the globally
+      # installed pi, which is also the only way the package is ever consumed,
+      # and tsc likewise comes from the global install rather than a
+      # devDependency, so that nothing writes into the node_modules tree that
+      # scripts/link-pi-types.sh owns.
+      - name: Install pi and TypeScript
+        run: npm i -g @earendil-works/pi-coding-agent typescript@^7
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      # Guards the "files" field. `npm pack --dry-run` alone proves nothing: it
+      # exits 0 whatever it packs, so a source file added at the root and left
+      # out of "files" would ship a package that cannot load. Assert instead
+      # that every tracked source file is in the tarball and no development
+      # file is.
+      - name: Check package contents
+        run: |
+          npm pack --pack-destination "$RUNNER_TEMP" >/dev/null
+          tar -tzf "$RUNNER_TEMP"/*.tgz | sed 's|^package/||' | sort >packed.txt
+          # Every tracked .ts that is source, not test. A new file at the root
+          # left out of "files" is exactly what this must catch, so the list is
+          # derived from the tree rather than naming index.ts and lib/ by hand.
+          git ls-files '*.ts' ':!:tests/**' | sort >expected.txt
+
+          missing=$(comm -23 expected.txt packed.txt)
+          if [ -n "$missing" ]; then
+            echo "Tracked source files missing from the tarball:"
+            echo "$missing"
+            exit 1
+          fi
+
+          leaked=$(grep -E '^(tests|scripts|\.github)/|^tsconfig\.json$' packed.txt || true)
+          if [ -n "$leaked" ]; then
+            echo "Development files leaked into the tarball:"
+            echo "$leaked"
+            exit 1
+          fi
+
+          echo "Tarball contents:"
+          cat packed.txt

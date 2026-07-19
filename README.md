@@ -110,8 +110,8 @@ this is worth revisiting.
 ## Development
 
 ```
-npm run typecheck   # needs: npm i -g @earendil-works/pi-coding-agent
-npm test            # 16 assertions across three suites
+npm run typecheck   # needs: npm i -g @earendil-works/pi-coding-agent typescript
+npm test            # 17 tests across three suites
 ```
 
 To check the package still loads under pi's package rules:
@@ -120,9 +120,11 @@ To check the package still loads under pi's package rules:
 pi --no-extensions -e "$PWD" -p 'reply with exactly: ok'
 ```
 
-Do not add `extensions/btw/index.ts`. pi scans `extensions/` one level deep and treats a
-subdirectory as an extension only if it contains an `index.ts`, so adding one registers `/btw`
-twice.
+The entry point is `index.ts` at the package root, and everything it uses lives in `lib/`. The
+`pi.extensions` manifest in `package.json` names that one file explicitly, and an explicit
+manifest is authoritative: pi loads exactly the files it lists and never scans the package for
+more. So new modules can be added to `lib/` freely, and only `index.ts` decides what is
+registered.
 
 ## License
 

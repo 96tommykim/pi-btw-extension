@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { test } from "node:test";
-import { buildMultiPromoteNote, buildPromoteNote, buildRefinedPromoteNote } from "../extensions/btw/promote.ts";
+import { buildMultiPromoteNote, buildPromoteNote, buildRefinedPromoteNote } from "../lib/promote.ts";
 
 test("single note keeps the V1 self-describing format", () => {
   assert.equal(
