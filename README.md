@@ -17,7 +17,7 @@ to install.
 
 ## Try it
 
-Mid-task, ask the thing you did not want in the transcript:
+Mid-task, ask something you don't want to add to the main transcript:
 
 ```
 /btw what does this error actually mean?
@@ -26,8 +26,7 @@ Mid-task, ask the thing you did not want in the transcript:
 ```
 
 The first two are answered straight from the session context. The third sends the side agent off
-to read files. It decides which to do, per question — there is no separate "deep" command to
-remember.
+to read files. It chooses automatically, so there's no separate `deep` command to remember.
 
 ## Using it
 
@@ -39,8 +38,8 @@ remember.
 | `Ctrl+L` / `Ctrl+N` | Thread list / new thread. |
 | `Ctrl+P` | Share an answer with the main agent. |
 
-On macOS `Ctrl+Alt+B` is Ctrl+Option+B. If your terminal does not send Option as Meta — Terminal.app
-does not, by default — the shortcut never reaches pi. Use `/btw` instead.
+On macOS, `Ctrl+Alt+B` is Ctrl+Option+B. If your terminal doesn't send Option as Meta, the
+shortcut won't reach pi. Terminal.app doesn't do this by default, so use `/btw` instead.
 
 `Ctrl+P` puts a cursor on the answers you have not shared yet:
 
@@ -52,16 +51,15 @@ does not, by default — the shortcut never reaches pi. Use `/btw` instead.
 | `r` | Rewrite it as a short summary, then share that |
 | `Esc` | Never mind |
 
-A shared answer arrives as one self-describing `[/btw note …]` message, so the main agent knows
-where it came from. It does not start a turn — the note is simply there the next time the agent
-speaks.
+A shared answer arrives as a `[/btw note ...]` message. That tag tells the main agent where the
+answer came from. Sharing doesn't start a turn. The note is there the next time the agent speaks.
 
 ## Why it stays cheap
 
-The side question reuses the main session's exact prompt prefix and system prompt, so the
-provider's cache stays warm: you pay for the question, not for a second context. And because that
-prefix is re-read on every main turn, answers reflect what the agent knows *now* — not what it
-knew when you opened the thread.
+The side question reuses the main session's exact prompt prefix and system prompt. That keeps the
+provider's cache warm, so you pay for the question, not a second context. The extension recaptures
+that prefix every main turn. Answers use what the agent knows *now*, not what it knew when you
+opened the thread.
 
 ## Configuration
 
@@ -91,22 +89,22 @@ One file per project:
 ~/.pi/agent/btw/threads-<hash-of-cwd>.json
 ```
 
-It is rewritten atomically, so a crash cannot corrupt it. Two pi sessions open in the same
-directory will overwrite each other's threads — last write wins.
+It is rewritten atomically, so a crash can't corrupt it. Two pi sessions open in the same
+directory will overwrite each other's threads. The last write wins.
 
-## What it will not do
+## What it won't do
 
-The side agent is read-only. It never gets `write`, `edit`, or `bash` — only `read`, `grep`,
-`find`, and `ls`, and the allowlist can only shrink that set.
+The side agent is read-only. It gets `read`, `grep`, `find`, and `ls`, but not `write`, `edit`,
+or `bash`. The allowlist can only shrink that set.
 
 That is deliberate, not a default you are meant to loosen. The side channel runs alongside the main
-agent and calls tools internally, so a permission-gate extension never sees those calls and could
-not stop them.
+agent and calls tools internally, so a permission-gate extension never sees those calls and can't
+stop them.
 
-There is no web search or page fetching either, and none planned. pi has no web tool in core and no
-way for one extension to borrow another's, so adding it would mean either reaching into another
-extension's internals or writing SSRF-safe fetching from scratch — too much security surface for a
-side-question tool. If pi ships a public tool-sharing API, this is worth revisiting.
+Web search and page fetching aren't supported, and there are no plans to add them. pi has no
+built-in web tool, and extensions can't borrow each other's tools. Adding secure fetching here
+would add too much complexity for a side-question tool. If pi adds a public tool-sharing API, web
+support could make sense here later.
 
 ## Removing and updating
 
@@ -140,8 +138,9 @@ deep and treats a subdirectory as an extension only when it contains an `index.t
 | [peterp/pi-sidequest](https://github.com/peterp/pi-sidequest) | Threaded, persistent, tool-capable side channel | Where threads, persistence, and the overlay come from |
 | [pi-psst](https://www.npmjs.com/package/pi-psst) | Ephemeral side questions | The same idea, kept simpler |
 
-This one puts those together: cache-warm and threaded, with read-only tools when a question needs
-them, grounded live rather than snapshotted, and opt-in promotion back to the main thread.
+This extension combines those ideas. It keeps side questions threaded and cache-warm, reads files
+when needed, and uses the latest session context. Nothing goes back to the main conversation until
+you share it.
 
 ## License
 
