@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-07-20
+
+### Changed
+
+- The promoted note header is now `[/btw note: ...]` instead of
+  `[/btw note - ...]`. The `[/btw note` prefix that the main agent keys on is
+  unchanged, so an `AGENTS.md` rule matching it still works.
+- Overlay footers separate their key hints with `|` instead of a middle dot.
+- README reorganised: flat section names, thread storage folded into How it
+  works, removing and updating folded into Install.
+
 ## [0.1.0] - 2026-07-19
 
 First public release. Extracted from a private harness repository, where the
