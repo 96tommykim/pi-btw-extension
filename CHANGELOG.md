@@ -12,11 +12,11 @@ feature was developed and hardened through five milestones.
 
 ### Added
 
-- `/btw <question>` — a side question answered against the live session
+- `/btw <question>`: a side question answered against the live session
   context, written to a side thread instead of the main conversation.
 - Cache-warm shadow pass: the side question reuses the main session's exact
   system prompt and message prefix, so the provider's prompt cache stays warm.
-- Live grounding — every ask re-reads the current main context rather than a
+- Live grounding: every ask re-reads the current main context rather than a
   snapshot taken when the thread opened.
 - Automatic depth: the side agent answers from context when it can and reaches
   for a read-only tool allowlist (`read`, `grep`, `find`, `ls`) only when that

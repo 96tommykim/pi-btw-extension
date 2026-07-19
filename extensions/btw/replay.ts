@@ -14,7 +14,7 @@ export const emptyState = (): BtwState => ({ version: 1, threads: [] });
 
 /**
  * Apply one delta in place. Defensive by contract: an unknown op, malformed
- * payload, duplicate create, or dangling reference must be a no-op — one bad
+ * payload, duplicate create, or dangling reference must be a no-op. One bad
  * line in the session file must never poison the rest of the replay.
  */
 export function applyDelta(state: BtwState, delta: unknown): void {

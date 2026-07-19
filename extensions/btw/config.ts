@@ -26,7 +26,7 @@ function readJsonFile(path: string): Partial<BtwSettings> {
   }
 }
 
-/** A finite integer ≥ 1, else undefined — a malformed value must not defeat a cap. */
+/** A finite integer ≥ 1, else undefined. A malformed value must not defeat a cap. */
 function posInt(v: unknown): number | undefined {
   return typeof v === "number" && Number.isFinite(v) && v >= 1 ? Math.floor(v) : undefined;
 }

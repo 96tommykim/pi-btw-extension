@@ -39,10 +39,10 @@ export class BtwListView implements Component {
   render(width: number): string[] {
     const th = this.theme;
     const box = new Box(1, 1, (t) => th.bg("customMessageBg", t));
-    box.addChild(new Text(`${th.fg("accent", "btw ▸ threads")}${th.fg("dim", "   Ctrl+N new · Esc close")}`, 0, 0));
+    box.addChild(new Text(`${th.fg("accent", "btw ▸ threads")}${th.fg("dim", "   Ctrl+N new | Esc close")}`, 0, 0));
     box.addChild(new Text("", 0, 0));
     if (this.empty) {
-      box.addChild(new Text(th.fg("dim", "no threads yet — Ctrl+N to start one"), 0, 0));
+      box.addChild(new Text(th.fg("dim", "no threads yet. Ctrl+N to start one"), 0, 0));
       return box.render(width);
     }
     for (const line of this.list!.render(width - 2)) box.addChild(new Text(line, 0, 0));

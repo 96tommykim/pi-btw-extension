@@ -2,8 +2,8 @@ import { getMarkdownTheme, type Theme } from "@earendil-works/pi-coding-agent";
 import { Box, type Component, Input, Markdown, matchesKey, Text, type TUI } from "@earendil-works/pi-tui";
 import type { BtwThread } from "./threads";
 
-const FOOTER = "  ↑↓/PgUp/PgDn scroll · Enter ask · Ctrl+P share · Ctrl+L threads · Ctrl+N new · Esc close";
-const SELECT_FOOTER = "  ↑↓ pick · Enter share · a share all · r refine+share · Esc cancel";
+const FOOTER = "  ↑↓/PgUp/PgDn scroll | Enter ask | Ctrl+P share | Ctrl+L threads | Ctrl+N new | Esc close";
+const SELECT_FOOTER = "  ↑↓ pick | Enter share | a share all | r refine+share | Esc cancel";
 
 /** Chat view for one thread: scrollback of Q/A (markdown) + a bottom input. */
 export class BtwThreadView implements Component {
@@ -76,7 +76,7 @@ export class BtwThreadView implements Component {
       if (matchesKey(data, "return")) { this.exitSelect(); return this.cb.onPromoteSelected(ids[this.selIdx]); }
       if (data === "a") { this.exitSelect(); return this.cb.onPromoteAll(); }
       if (data === "r") { this.exitSelect(); return this.cb.onRefineSelected(ids[this.selIdx]); }
-      return; // swallow everything else — the input line is inert while selecting
+      return; // swallow everything else; the input line is inert while selecting
     }
     if (matchesKey(data, "ctrl+l")) return this.cb.onList();
     if (matchesKey(data, "ctrl+n")) return this.cb.onNew();

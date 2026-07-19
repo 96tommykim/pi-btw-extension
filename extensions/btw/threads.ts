@@ -54,12 +54,12 @@ export function createThreadStore(): ThreadStore {
     if (persistErrorNotified) return;
     persistErrorNotified = true;
     notifyPersistError?.(
-      "btw: couldn't save threads (read-only home or full disk?) — this session's threads won't persist across sessions",
+      "btw: couldn't save threads (read-only home or full disk?). This session's threads won't persist across sessions",
     );
   };
 
   // Every mutation rewrites the whole per-project file. It is small, the write is
-  // atomic (tmp+rename), and JSON.stringify runs synchronously inside the save —
+  // atomic (tmp+rename), and JSON.stringify runs synchronously inside the save,
   // so the V2.1 clone-at-record-time dance is unnecessary here.
   const persist = () => {
     storePath ??= resolveStorePath(process.cwd());
@@ -132,7 +132,7 @@ export function createThreadStore(): ThreadStore {
       const t = find(threadId);
       if (!t || t.entries.length === 0) return "";
       // Fold prior Q/A into one text block; shadow.ts folds this into the current
-      // question's UserMessage. Synthesizing an AssistantMessage is avoided —
+      // question's UserMessage. Synthesizing an AssistantMessage is avoided:
       // AssistantMessage requires api/provider/model/usage/stopReason, which a
       // replayed history entry has no honest source for.
       return t.entries

@@ -22,10 +22,10 @@ export default function (pi: ExtensionAPI) {
     },
   });
 
-  // Overlay key: a fixed, conflict-free Ctrl+Alt+B. Not configurable — see the README.
+  // Overlay key: a fixed, conflict-free Ctrl+Alt+B. Not configurable; see the README.
   // Key.ctrlAlt yields the literal "ctrl+alt+b", and pi-tui keeps `alt` and `super`
   // distinct with no platform remapping, so on macOS this is Ctrl+Option+B (NOT Cmd);
-  // a terminal that does not send Option as Meta never delivers it — use /btw instead.
+  // a terminal that does not send Option as Meta never delivers it, so use /btw instead.
   pi.registerShortcut(Key.ctrlAlt("b"), {
     description: "btw: open the side-question overlay",
     handler: async (ctx) => {

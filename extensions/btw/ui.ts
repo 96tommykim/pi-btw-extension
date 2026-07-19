@@ -153,7 +153,7 @@ class BtwOverlay implements Component {
     this.onPromote(buildPromoteNote(entry.question, entry.answer));
     this.threads.markPromoted(active.id, entry.id);
     this.threadView.setThread(this.threads.getActive());
-    this.ctx.ui.notify("btw: shared to main — the note reaches the agent on its next turn", "info");
+    this.ctx.ui.notify("btw: shared to main. The note reaches the agent on its next turn", "info");
     this.tui.requestRender();
   }
 
@@ -171,7 +171,7 @@ class BtwOverlay implements Component {
 
   private refineEntry(entryId: string): void {
     if (this.controller) {
-      this.ctx.ui.notify("btw: busy — refine again once the current run settles", "info");
+      this.ctx.ui.notify("btw: busy. Refine again once the current run settles", "info");
       return;
     }
     const active = this.threads.getActive();
@@ -186,10 +186,10 @@ class BtwOverlay implements Component {
       .then((r) => {
         if (this.settled || r.aborted) return;
         if (r.error || !r.text) {
-          this.ctx.ui.notify(`btw: refine failed${r.error ? ` — ${r.error}` : ""}`, "error");
+          this.ctx.ui.notify(`btw: refine failed${r.error ? `: ${r.error}` : ""}`, "error");
           return;
         }
-        if (entry.promoted) return; // promoted raw while this refine was in flight — don't double-share
+        if (entry.promoted) return; // promoted raw while this refine was in flight, don't double-share
         this.onPromote?.(buildRefinedPromoteNote(r.text));
         this.threads.markPromoted(active.id, entry.id);
         this.threadView.setThread(this.threads.getActive());
@@ -197,7 +197,7 @@ class BtwOverlay implements Component {
       })
       .catch((e) => {
         if (this.settled) return;
-        this.ctx.ui.notify(`btw: refine failed — ${e instanceof Error ? e.message : String(e)}`, "error");
+        this.ctx.ui.notify(`btw: refine failed: ${e instanceof Error ? e.message : String(e)}`, "error");
       })
       .finally(() => {
         this.controller = null;

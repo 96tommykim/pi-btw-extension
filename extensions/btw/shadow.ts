@@ -143,7 +143,7 @@ const REFINE_INSTRUCTION = `Rewrite the side Q/A below into a short note for the
 Rules:
 - Keep ONLY what helps the main task: the conclusion, key facts, decisions, and file/symbol references.
 - Drop hedging, restated context, and exploration narrative.
-- At most 6 lines. No preamble, no sign-off — output the note body only.`;
+- At most 6 lines. No preamble, no sign-off. Output the note body only.`;
 
 export type QuickResult = { text: string; aborted: boolean; error?: string };
 
