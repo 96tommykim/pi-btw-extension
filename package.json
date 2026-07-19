@@ -1,6 +1,6 @@
 {
   "name": "pi-btw-extension",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Ask a side question grounded in your live pi session, without polluting the main conversation.",
   "license": "MIT",
   "type": "module",
@@ -41,7 +41,7 @@
   },
   "scripts": {
     "typecheck": "./scripts/link-pi-types.sh && tsc --noEmit -p tsconfig.json",
-    "test": "tests/btw-store.sh && tests/btw-replay.sh && tests/btw-promote.sh",
+    "test": "tests/btw-store.sh && tests/btw-replay.sh && tests/btw-promote.sh && tests/btw-threads.sh",
     "prepublishOnly": "npm run typecheck && npm test"
   }
 }

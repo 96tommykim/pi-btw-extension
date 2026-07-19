@@ -21,6 +21,7 @@ export interface ThreadStore {
   getActive(): BtwThread | null;
   setActive(id: string): void;
   newThread(): BtwThread;
+  deleteThread(id: string): void;
   append(threadId: string, entry: BtwEntry): void;
   tailDigest(threadId: string): string;
   markPromoted(threadId: string, entryId: string): void;
@@ -123,6 +124,15 @@ export function createThreadStore(): ThreadStore {
       state.activeThreadId = t.id;
       persist();
       return t;
+    },
+    deleteThread(id) {
+      const idx = state.threads.findIndex((t) => t.id === id);
+      if (idx === -1) return;
+      state.threads.splice(idx, 1);
+      // Dropping the active thread clears the pointer; the overlay decides what
+      // to show next rather than the store silently picking a replacement.
+      if (state.activeThreadId === id) delete state.activeThreadId;
+      persist();
     },
     append(threadId, entry) {
       const t = find(threadId);

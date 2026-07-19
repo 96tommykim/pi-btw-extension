@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-07-20
+
+### Added
+
+- Delete a thread from the thread list. Press `x` on the highlighted thread and
+  `x` again to confirm; any other key cancels. Deleting a thread keeps you in the
+  list; if it was the thread you had open, there is nothing to return to, so Esc
+  then closes the overlay and the next `/btw` reopens on your most recent
+  remaining thread.
+
 ## [0.1.2] - 2026-07-20
 
 ### Changed

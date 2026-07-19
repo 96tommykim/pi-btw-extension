@@ -59,6 +59,11 @@ Terminal.app doesn't by default, so use `/btw` there.
 Shared answers arrive in the main conversation as a single `[/btw note ...]` message. Sharing does
 not start a turn; the note is there on the agent's next one.
 
+In the thread list, press `x` to delete the highlighted thread. The row asks for a second `x` to
+confirm; any other key cancels. Deleting a thread keeps you in the list. If you delete the thread you
+had open, there is nothing to return to, so Esc from the list closes the overlay rather than reopening
+it; the next `/btw` then lands on your most recent remaining thread.
+
 ## How it works
 
 The side question is sent with the main session's own system prompt and message prefix, so the
@@ -111,7 +116,7 @@ this is worth revisiting.
 
 ```
 npm run typecheck   # needs: npm i -g @earendil-works/pi-coding-agent typescript
-npm test            # 17 tests across three suites
+npm test            # 22 tests across four suites
 ```
 
 To check the package still loads under pi's package rules:
