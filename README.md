@@ -1,20 +1,10 @@
 # pi-btw-extension
 
-`/btw` lets you ask a side question inside a [pi](https://github.com/badlogic/pi-mono) session
-without writing anything to the main conversation history or interrupting the task the main
-agent is running. It opens an overlay, answers grounded in your current session, and — only if
-you choose — lets you promote the answer back into the main thread.
+Ask a question mid-task without derailing the conversation.
 
-Three things distinguish it from a plain "ask a second question" helper:
-
-- **Cache-warm.** The side question reuses the main session's exact provider message prefix and
-  system prompt, so the provider's prompt cache stays warm instead of paying for a cold second
-  context on every ask.
-- **Live grounding, not a snapshot.** Every ask re-reads the current state of the main
-  conversation, so answers reflect what the main agent knows *right now*, not what it knew when
-  the side thread was opened.
-- **Threads that persist.** Side conversations are threaded and saved to disk per project, so
-  they survive across pi sessions in the same directory, not just within one running process.
+`/btw` opens a small overlay, answers using everything your [pi](https://github.com/badlogic/pi-mono)
+session already knows, and leaves the main conversation untouched. If an answer turns out to
+matter, you hand it to the main agent yourself. Nothing crosses over unless you say so.
 
 ## Install
 
@@ -22,139 +12,141 @@ Three things distinguish it from a plain "ask a second question" helper:
 pi install npm:pi-btw-extension
 ```
 
-pi bundles the packages this extension depends on (`@earendil-works/pi-coding-agent`,
-`@earendil-works/pi-ai`, `@earendil-works/pi-tui`), so there is nothing else to install.
+Needs pi and Node 22.19+. pi already bundles everything this depends on, so there is nothing else
+to install.
 
-## Usage
+## Try it
 
-```
-/btw <question>
-```
-
-Ask a side question. It is answered grounded in the current main session, in an overlay — the
-main conversation is untouched.
+Mid-task, ask the thing you did not want in the transcript:
 
 ```
-/btw
+/btw what does this error actually mean?
+/btw summarize what we have changed so far
+/btw where is retryPolicy used?
 ```
 
-With no argument, `/btw` reopens the last thread instead of prompting for a new question.
+The first two are answered straight from the session context. The third sends the side agent off
+to read files. It decides which to do, per question — there is no separate "deep" command to
+remember.
 
-`Ctrl+Alt+B` toggles the overlay open and closed without going through the command palette. This
-shortcut is fixed and not currently configurable. On macOS the chord is **Ctrl+Option+B**;
-terminals that do not send Option as Meta (Terminal.app in its default configuration) will not
-deliver it — those users should use the `/btw` command instead.
+## Using it
 
-Inside the overlay you can navigate between threads and scroll a thread's history. Press `Ctrl+L`
-to open the thread list and `Ctrl+N` to start a new thread. To share an answer with the main
-agent, press `Ctrl+P` to arm select mode:
-
-| Key | Action |
+| Key or command | What it does |
 |---|---|
-| `↑` `↓` | Move the selection cursor over promotable Q/A entries |
-| `Enter` | Share the selected Q/A |
+| `/btw <question>` | Ask. Opens the overlay. |
+| `/btw` | Reopen the last thread. |
+| `Ctrl+Alt+B` | Toggle the overlay. |
+| `Ctrl+L` / `Ctrl+N` | Thread list / new thread. |
+| `Ctrl+P` | Share an answer with the main agent. |
+
+On macOS `Ctrl+Alt+B` is Ctrl+Option+B. If your terminal does not send Option as Meta — Terminal.app
+does not, by default — the shortcut never reaches pi. Use `/btw` instead.
+
+`Ctrl+P` puts a cursor on the answers you have not shared yet:
+
+| Key | What it does |
+|---|---|
+| `↑` `↓` | Pick one |
+| `Enter` | Share it |
 | `a` | Share the whole thread |
-| `r` | Refine the selection into a short summary, then share it |
-| `Esc` | Cancel select mode |
+| `r` | Rewrite it as a short summary, then share that |
+| `Esc` | Never mind |
 
-## How it works
+A shared answer arrives as one self-describing `[/btw note …]` message, so the main agent knows
+where it came from. It does not start a turn — the note is simply there the next time the agent
+speaks.
 
-The shadow pass that answers your `/btw` question uses the same system prompt and the same live
-message prefix as the main agent, which is what keeps the provider's prompt cache warm — only
-the side question itself (and any tool calls it triggers) is new input. Because the prefix is
-recaptured on every main-agent turn, each `/btw` ask sees the latest main context, not a snapshot
-frozen at thread-open time.
+## Why it stays cheap
 
-Nothing from a `/btw` thread reaches the main conversation unless you explicitly promote it. A
-promoted answer arrives as a single, self-describing message — `[/btw note …]` — so the main
-model understands where it came from without any prior knowledge of the extension.
+The side question reuses the main session's exact prompt prefix and system prompt, so the
+provider's cache stays warm: you pay for the question, not for a second context. And because that
+prefix is re-read on every main turn, answers reflect what the agent knows *now* — not what it
+knew when you opened the thread.
 
 ## Configuration
 
-Settings are resolved with **environment variables taking precedence**, falling back to
-`~/.pi/agent/btw.json`, and finally to the built-in defaults below.
+Environment variables win, then `~/.pi/agent/btw.json`, then these defaults:
 
 | Setting | Default | Environment variable | Notes |
 |---|---|---|---|
-| `quakeKeys` | ``["`"]`` | `BTW_QUAKE_KEYS` | **Accepted but not applied.** The value is parsed and validated like any other setting, but nothing in the extension reads it — the overlay shortcut is fixed at `Ctrl+Alt+B` (`Ctrl+Option+B` on macOS) and cannot be changed by this setting. Setting it has no effect on any key binding. |
-| `maxTokens` | `1024` | `BTW_MAX_TOKENS` | Caps only the refine-on-promote pass |
-| `deepMaxTokens` | `4096` | `BTW_DEEP_MAX_TOKENS` | Caps the answer for every `/btw` ask |
-| `cacheRetention` | `"short"` | — | **Accepted but not applied.** The value is merged in from config like any other setting, but the extension always uses `"short"` regardless of what is set. |
-| `deepToolAllowlist` | `["read","grep","find","ls"]` | — | Read-only tools the side agent may call. **Filter-only:** this can only narrow the fixed set of four built-in read-only tools, never widen it — an unrecognized name is silently ignored, and there is no way to grant the side agent a tool outside that set. |
-| `deepToolCallBudget` | `8` | `BTW_DEEP_BUDGET` | Maximum tool calls per ask before a partial answer is returned |
+| `deepMaxTokens` | `4096` | `BTW_DEEP_MAX_TOKENS` | Caps every answer |
+| `maxTokens` | `1024` | `BTW_MAX_TOKENS` | Caps only the `r` summary |
+| `deepToolCallBudget` | `8` | `BTW_DEEP_BUDGET` | Tool calls per ask before it wraps up |
+| `deepToolAllowlist` | `["read","grep","find","ls"]` | — | Can only narrow this list, never extend it |
 
-The `deep*` names predate the current automatic mode, where every `/btw` ask can call tools if it
-needs to — there is no longer a separate "deep" trigger. The names are kept as-is for backwards
-compatibility with existing configuration files. `deepMaxTokens` caps the answer for every ask;
-`maxTokens` only caps the length of the refined summary produced when you press `r` in select
-mode.
+```json
+{
+  "deepMaxTokens": 8192,
+  "deepToolCallBudget": 4
+}
+```
 
-`quakeKeys` (and its `BTW_QUAKE_KEYS` environment variable) are kept in the table because a
-`btw.json` written for an earlier design, or an environment with `BTW_QUAKE_KEYS` set, is silently
-accepted rather than rejected — but the value does nothing. If you were relying on it to remap the
-overlay key, it never worked; the binding has always been the fixed `Ctrl+Alt+B` shown above
-(`Ctrl+Option+B` on macOS).
+The `deep*` names are older than the current behavior — there used to be a separate deep mode — and
+are kept so existing config files keep working.
 
-## Where your threads live
+Two settings are accepted but do nothing: `quakeKeys` (the overlay shortcut is fixed) and
+`cacheRetention` (always `short`). They are parsed rather than rejected so older config files do
+not break.
 
-Threads are stored outside the pi session, one JSON file per project, at:
+## Where threads live
+
+One file per project:
 
 ```
 ~/.pi/agent/btw/threads-<hash-of-cwd>.json
 ```
 
-The file is rewritten atomically on every change (write to a temp file, then rename), so a crash
-mid-write cannot corrupt it. This gives threads one property worth knowing about:
+It is rewritten atomically, so a crash cannot corrupt it. Two pi sessions open in the same
+directory will overwrite each other's threads — last write wins.
 
-- If you have two pi sessions open in the same project at once, the store is last-write-wins —
-  the two sessions do not merge their writes.
+## What it will not do
 
-## Safety
+The side agent is read-only. It never gets `write`, `edit`, or `bash` — only `read`, `grep`,
+`find`, and `ls`, and the allowlist can only shrink that set.
 
-The side agent that answers `/btw` questions is **read-only**. It never receives `write`,
-`edit`, or `bash` — only a small allowlist of read-only tools (`read`, `grep`, `find`, `ls`).
+That is deliberate, not a default you are meant to loosen. The side channel runs alongside the main
+agent and calls tools internally, so a permission-gate extension never sees those calls and could
+not stop them.
 
-Giving the side agent the main agent's full toolset was considered and rejected: the side channel
-runs concurrently with the main agent and executes its tools internally, so a permission-gate
-extension a user has installed to approve or deny tool calls would never see those calls and
-could not protect against them. The read-only restriction is a hard invariant, not a default you
-are expected to loosen.
+There is no web search or page fetching either, and none planned. pi has no web tool in core and no
+way for one extension to borrow another's, so adding it would mean either reaching into another
+extension's internals or writing SSRF-safe fetching from scratch — too much security surface for a
+side-question tool. If pi ships a public tool-sharing API, this is worth revisiting.
 
-## Not planned: web tools
+## Removing and updating
 
-`/btw` does not have web search or page-fetching, and there is no near-term plan to add it. The
-honest reason: pi has no web tool in its core toolset, and no public API for one extension to
-reuse another extension's tools. Adding web access to `/btw` would mean either hard-importing a
-separate web-access extension's private internals — which breaks self-containment and portability
-— or reimplementing search and SSRF-safe fetching from scratch inside this extension, which is a
-disproportionate amount of security surface for a side-question tool. Neither is justified today.
-This will be revisited if pi ships a public inter-extension tool-sharing API that lets `/btw`
-reuse an existing web tool's implementation instead of building its own.
+```
+pi remove npm:pi-btw-extension
+pi update --extension npm:pi-btw-extension
+```
 
 ## Development
 
 ```
-npm run typecheck   # requires: npm i -g @earendil-works/pi-coding-agent
-npm test             # 16 assertions across three suites
+npm run typecheck   # needs: npm i -g @earendil-works/pi-coding-agent
+npm test            # 16 assertions across three suites
 ```
 
-To confirm the package loads correctly under pi's own package rules:
+Confirm the package still loads under pi's own package rules:
 
 ```
 pi --no-extensions -e "$PWD" -p 'reply with exactly: ok'
 ```
 
+One trap worth knowing: **do not add `extensions/btw/index.ts`.** pi scans `extensions/` one level
+deep and treats a subdirectory as an extension only when it contains an `index.ts`. Add one and
+`/btw` gets registered twice.
+
 ## Prior art
 
-| Project | What it does | How this extension relates |
+| Project | What it does | Relation |
 |---|---|---|
-| [Fatih0234/btw](https://github.com/Fatih0234/btw) | Cache-warm shadow side questions | Source of the cache-warm approach this extension builds on |
-| [peterp/pi-sidequest](https://github.com/peterp/pi-sidequest) | Threaded, persistent, tool-capable side channel with a Quake overlay | Source of the threading, persistence, and overlay ideas |
-| [pi-psst](https://www.npmjs.com/package/pi-psst) | Ephemeral side questions | Confirms the side-channel pattern this extension follows |
+| [Fatih0234/btw](https://github.com/Fatih0234/btw) | Cache-warm shadow side questions | Where the cache-warm approach comes from |
+| [peterp/pi-sidequest](https://github.com/peterp/pi-sidequest) | Threaded, persistent, tool-capable side channel | Where threads, persistence, and the overlay come from |
+| [pi-psst](https://www.npmjs.com/package/pi-psst) | Ephemeral side questions | The same idea, kept simpler |
 
-This extension combines the cache-warm shadow core with persistent threads, on-demand read-only
-tools, live (not snapshotted) grounding, and opt-in promote-to-main — a combination none of the
-projects above ship on their own.
+This one puts those together: cache-warm and threaded, with read-only tools when a question needs
+them, grounded live rather than snapshotted, and opt-in promotion back to the main thread.
 
 ## License
 
