@@ -320,6 +320,6 @@ export async function openOverlay(
       if (q) overlay.submitInitial(q);
       return overlay;
     },
-    { overlay: true, overlayOptions: { width: "80%", maxHeight: "90%", anchor: "center" } },
+    { overlay: true, overlayOptions: { width: "80%", anchor: "center" } },
   );
 }
