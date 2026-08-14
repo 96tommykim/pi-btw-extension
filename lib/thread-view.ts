@@ -1,5 +1,5 @@
 import { getMarkdownTheme, type Theme } from "@earendil-works/pi-coding-agent";
-import { Box, type Component, Input, Markdown, matchesKey, Text, type TUI } from "@earendil-works/pi-tui";
+import { Box, type Component, Input, Markdown, matchesKey, Spacer, Text, truncateToWidth, type TUI } from "@earendil-works/pi-tui";
 import type { BtwThread } from "./threads";
 
 const FOOTER = "  ↑↓/PgUp/PgDn scroll | Enter ask | Ctrl+P share | Ctrl+L threads | Ctrl+N new | Esc close";
@@ -108,13 +108,22 @@ export class BtwThreadView implements Component {
     // final bodyLines exclude it (it gets pushed past all later children).
     let prevLines = this.selectIds ? body.render(width).length - 1 : 0;
     if (this.thread && this.thread.entries.length > 0) {
-      for (const e of this.thread.entries) {
-        const qLine = e.id === selectedId ? th.fg("accent", `▸ Q: ${e.question}`) : th.fg("dim", `Q: ${e.question}`);
-        body.addChild(new Text(qLine, 0, 0));
-        if (e.error) body.addChild(new Text(th.fg("error", `⚠️  ${e.error}`), 0, 0));
-        else body.addChild(new Markdown(e.answer || "(empty)", 0, 0, getMarkdownTheme()));
-        if (e.promoted) body.addChild(new Text(th.fg("dim", "✓ shared to main"), 0, 0));
-        body.addChild(new Text("", 0, 0));
+      for (const [index, e] of this.thread.entries.entries()) {
+        if (index > 0) {
+          // One rule and one breathing row keep exchanges distinct without cards.
+          body.addChild(new Text(th.fg("muted", "─".repeat(Math.max(1, width - 2))), 0, 0));
+          body.addChild(new Spacer(1));
+          if (this.selectIds) prevLines = body.render(width).length - 1;
+        }
+        const marker = e.id === selectedId ? th.fg("accent", "▸ ") : "";
+        const youLabel = th.fg("userMessageText", th.bold("YOU"));
+        body.addChild(new Text(`${marker}${youLabel}`, 0, 0));
+        body.addChild(new Text(th.fg("userMessageText", e.question), 2, 0));
+        body.addChild(new Spacer(1));
+        body.addChild(new Text(th.fg("customMessageLabel", th.bold("BTW")), 0, 0));
+        if (e.error) body.addChild(new Text(th.fg("error", `⚠️  ${e.error}`), 2, 0));
+        else body.addChild(new Markdown(e.answer || "(empty)", 2, 0, getMarkdownTheme()));
+        if (e.promoted) body.addChild(new Text(th.fg("dim", "✓ shared to main"), 2, 0));
         if (this.selectIds) {
           const n = body.render(width).length - 1;
           spans.set(e.id, [prevLines, n]);
@@ -133,15 +142,28 @@ export class BtwThreadView implements Component {
     // -6 not -4: the overlay frame (top+bottom border) now takes two rows.
     const viewport = Math.max(3, this.tui.terminal.rows - 6);
     const bodyBudget = Math.max(1, viewport - 2);
-    // Keep the selected entry inside the visible window while picking.
-    if (selectedId && bodyLines.length > bodyBudget) {
-      const span = spans.get(selectedId);
-      if (span) {
-        const maxOffset = bodyLines.length - bodyBudget;
+    const selectedSpan = selectedId ? spans.get(selectedId) : undefined;
+    // Protect the selected marker and its first question-content row from scroll
+    // indicators. A one-row viewport can show only the marker.
+    const selectedProtectedEnd = selectedSpan ? Math.min(bodyLines.length, selectedSpan[0] + 2) : 0;
+    const isSelectedRow = (line: number) =>
+      selectedSpan !== undefined && line >= selectedSpan[0] && line < selectedProtectedEnd;
+    // Keep the selected entry's marker and first question row inside the visible
+    // window while picking.
+    if (selectedSpan && bodyLines.length > bodyBudget) {
+      const maxOffset = bodyLines.length - bodyBudget;
+      if (bodyBudget === 1) {
+        this.scrollOffset = Math.min(maxOffset, Math.max(0, bodyLines.length - selectedSpan[0] - 1));
+      } else if (bodyBudget === 2) {
+        this.scrollOffset = Math.min(maxOffset, Math.max(0, bodyLines.length - selectedProtectedEnd));
+      } else {
         const winEnd = bodyLines.length - this.scrollOffset;
-        if (span[1] + 1 > winEnd) this.scrollOffset = Math.max(0, bodyLines.length - span[1] - 1);
-        else if (span[0] - 1 < winEnd - bodyBudget)
-          this.scrollOffset = Math.min(maxOffset, bodyLines.length - Math.max(0, span[0] - 1) - bodyBudget);
+        const winStart = winEnd - bodyBudget;
+        // Reserve the first visible row for the ↑ more indicator when needed.
+        if (selectedSpan[0] - 1 < winStart)
+          this.scrollOffset = Math.min(maxOffset, bodyLines.length - Math.max(0, selectedSpan[0] - 1) - bodyBudget);
+        // Leave room for the question row and the ↓ more indicator below the marker.
+        else if (selectedSpan[0] + 3 > winEnd) this.scrollOffset = Math.max(0, bodyLines.length - selectedSpan[0] - 3);
       }
     }
     let shown = bodyLines;
@@ -149,17 +171,19 @@ export class BtwThreadView implements Component {
       const maxOffset = bodyLines.length - bodyBudget;
       if (this.scrollOffset > maxOffset) this.scrollOffset = maxOffset;
       const end = bodyLines.length - this.scrollOffset;
-      shown = bodyLines.slice(Math.max(0, end - bodyBudget), end);
-      if (this.scrollOffset < maxOffset) shown = [th.fg("dim", "  ↑ more"), ...shown.slice(1)];
-      if (this.scrollOffset > 0) shown = [...shown.slice(0, -1), th.fg("dim", "  ↓ more")];
+      const start = Math.max(0, end - bodyBudget);
+      shown = bodyLines.slice(start, end);
+      if (this.scrollOffset < maxOffset && !isSelectedRow(start))
+        shown = [th.fg("dim", "  ↑ more"), ...shown.slice(1)];
+      if (this.scrollOffset > 0 && !isSelectedRow(end - 1))
+        shown = [...shown.slice(0, -1), th.fg("dim", "  ↓ more")];
     } else {
       this.scrollOffset = 0;
     }
 
     // --- input + footer ---
-    const prompt = th.fg("accent", "› ");
-    const inputLines = this.input.render(width - 2).map((l, i) => (i === 0 ? prompt + l : l));
-    return [...shown, ...inputLines, th.fg("dim", this.selectIds ? SELECT_FOOTER : FOOTER)];
+    const inputLines = this.input.render(width).map((l) => truncateToWidth(l, width));
+    return [...shown, ...inputLines, truncateToWidth(th.fg("dim", this.selectIds ? SELECT_FOOTER : FOOTER), width)];
   }
 
   invalidate(): void {

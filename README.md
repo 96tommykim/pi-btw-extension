@@ -116,7 +116,7 @@ this is worth revisiting.
 
 ```
 npm run typecheck   # needs: npm i -g @earendil-works/pi-coding-agent typescript
-npm test            # 22 tests across four suites
+npm test            # 29 tests across five suites
 ```
 
 To check the package still loads under pi's package rules:
