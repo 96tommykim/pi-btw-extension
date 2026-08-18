@@ -106,7 +106,7 @@ class BtwOverlay implements Component {
     const tail = this.threads.tailDigest(active.id);
     const model = this.ctx.model;
     this.controller = new AbortController();
-    this.threadView.setBusy(true, `asking ${model?.id ?? "model"}…`);
+    this.threadView.setBusy(true, `asking ${model?.id ?? "model"}…`, question);
     runSide(this.ctx, { prefix, tail, question, settings, signal: this.controller.signal })
       .then((r) => {
         if (this.settled) return;
@@ -141,6 +141,9 @@ class BtwOverlay implements Component {
     if (this.settled) return;
     this.settled = true;
     this.controller?.abort();
+    // The settled guard skips setBusy(false) in ask()/refineEntry()'s finally,
+    // so an in-flight spinner interval would otherwise outlive the overlay.
+    this.threadView.setBusy(false);
     this.done();
   }
 

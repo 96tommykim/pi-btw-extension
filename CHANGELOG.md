@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-08-18
+
+### Changed
+
+- The thread overlay is now a pager instead of a scrollback: one Q/A card fills
+  the screen at a time, and `←`/`→` step between questions (`PgUp`/`PgDn`
+  always do, `←`/`→` do only when the input is empty). `↑`/`↓` scroll within a
+  card that is longer than the viewport, top-anchored so the question is
+  always visible when you land on it.
+- Asking now shows a spinner on a pending card for the question in flight, so
+  you can keep browsing earlier questions with `←`/`→` while it answers. The
+  pending card belongs to its thread: switching threads hides it, switching
+  back shows it again.
+- The title row (thread position, and the refine spinner while one runs) stays
+  pinned while a long card scrolls.
+
 ## [0.2.2] - 2026-08-14
 
 ### Changed

@@ -35,11 +35,17 @@ pi update --extension npm:pi-btw-extension
 
 ## Usage
 
+The overlay shows one question/answer card at a time, not a scrollback; `←`/`→` step between
+questions.
+
 | Key or command | Action |
 |---|---|
 | `/btw <question>` | Ask; opens the overlay |
 | `/btw` | Reopen the last thread |
 | `Ctrl+Alt+B` | Toggle the overlay |
+| `←` `→` | Previous / next question (when the input is empty) |
+| `↑` `↓` | Scroll within a long card |
+| `PgUp` `PgDn` | Previous / next question, regardless of input |
 | `Ctrl+L` / `Ctrl+N` | Thread list / new thread |
 | `Ctrl+P` | Share an answer with the main agent |
 
@@ -50,7 +56,7 @@ Terminal.app doesn't by default, so use `/btw` there.
 
 | Key | Action |
 |---|---|
-| `↑` `↓` | Select |
+| `←` `→` | Pick a card |
 | `Enter` | Share the selected answer |
 | `a` | Share the whole thread |
 | `r` | Rewrite as a short summary, then share |
