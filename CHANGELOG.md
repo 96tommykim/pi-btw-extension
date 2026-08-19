@@ -5,6 +5,21 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-08-19
+
+### Changed
+
+- The overlay is now a fixed-height panel (60% of the terminal, minimum 12
+  rows) instead of tracking its content, so paging between cards of different
+  lengths no longer changes the box size. Shorter cards leave empty space;
+  longer cards scroll inside. On a tiny terminal a tall multi-line draft can
+  still grow the box — the input and footer are never hidden to keep the cap.
+
+### Fixed
+
+- The input's cursor and text start with the same one-column padding as the
+  card content and footer, instead of touching the frame's left border.
+
 ## [0.4.0] - 2026-08-19
 
 ### Changed
