@@ -44,9 +44,8 @@ questions.
 | `/btw` | Reopen the last thread |
 | `Ctrl+Alt+B` | Toggle the overlay |
 | `←` `→` | Previous / next question (when the input is empty) |
-| `↑` `↓` | Scroll within a long card |
+| `↑` `↓` | Scroll within a long card (when the input is empty) |
 | `PgUp` `PgDn` | Previous / next question, regardless of input |
-| `Ctrl+L` / `Ctrl+N` | Thread list / new thread |
 | `Ctrl+P` | Share an answer with the main agent |
 
 `Ctrl+Alt+B` is Ctrl+Option+B on macOS. Terminals that don't send Option as Meta never deliver it.
@@ -64,11 +63,6 @@ Terminal.app doesn't by default, so use `/btw` there.
 
 Shared answers arrive in the main conversation as a single `[/btw note ...]` message. Sharing does
 not start a turn; the note is there on the agent's next one.
-
-In the thread list, press `x` to delete the highlighted thread. The row asks for a second `x` to
-confirm; any other key cancels. Deleting a thread keeps you in the list. If you delete the thread you
-had open, there is nothing to return to, so Esc from the list closes the overlay rather than reopening
-it; the next `/btw` then lands on your most recent remaining thread.
 
 ## How it works
 
