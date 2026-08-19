@@ -18,6 +18,9 @@ const SELECT_FOOTER_HINTS: Array<[string, string]> = [
   ["esc", "cancel"],
 ];
 
+const HEIGHT_RATIO = 0.6; // overlay height as a share of the terminal
+const MIN_HEIGHT = 12; // rows, incl. the frame, before clamping to the terminal
+
 /** Pager view for one thread: one Q/A card per screen, ←/→ moves between questions. */
 export class BtwThreadView implements Component {
   private thread: BtwThread | null = null;
@@ -69,7 +72,8 @@ export class BtwThreadView implements Component {
         noMatch: (s: string) => th.fg("dim", s),
       },
     };
-    this.editor = new Editor(this.tui, editorTheme);
+    // paddingX 1 lines the cursor/text up with the card content's Box padding.
+    this.editor = new Editor(this.tui, editorTheme, { paddingX: 1 });
     this.editor.onSubmit = (v) => {
       const q = v.trim();
       if (!q) return;
@@ -268,10 +272,15 @@ export class BtwThreadView implements Component {
 
     const inputLines = this.editor.render(width);
     const refineLoader = busyHere && !pendingActive ? this.loader.render(width) : [];
-    const contentBudget = Math.max(
-      1,
-      this.tui.terminal.rows - 2 /* overlay frame */ - inputLines.length - refineLoader.length - 2 /* spacer + footer */,
-    );
+    const rows = this.tui.terminal.rows;
+    // Invariant: the box height is fixed by the terminal size alone, never by
+    // card content — only the inner window scrolls. One deliberate exception:
+    // the editor and footer are never sacrificed to the cap, so on a tiny
+    // terminal a tall multi-line draft (or the refine loader) can push the box
+    // past the target rather than hide the input.
+    const target = Math.min(rows, Math.max(MIN_HEIGHT, Math.round(rows * HEIGHT_RATIO)));
+    const innerH = Math.max(1, target - 2); // rows this view must return (frame adds 2)
+    const contentBudget = Math.max(1, innerH - inputLines.length - refineLoader.length - 2 /* spacer + footer */);
 
     let shownContent = contentLines;
     if (contentLines.length > contentBudget) {
@@ -293,8 +302,11 @@ export class BtwThreadView implements Component {
     const footerHints = this.selectIds ? SELECT_FOOTER_HINTS : FOOTER_HINTS;
     const footer = truncateToWidth(hintLine(th, footerHints), width, th.fg("dim", "…"));
 
-    // One breathing row between the card and the input area.
-    return [...shownContent, "", ...refineLoader, ...inputLines, footer];
+    // Pad so the view always returns the same row count for a given
+    // terminal/editor state: content stays top-anchored, editor+footer sit
+    // at the bottom of the box.
+    const pad = Math.max(0, contentBudget - shownContent.length);
+    return [...shownContent, ...Array(pad).fill(""), "", ...refineLoader, ...inputLines, footer];
   }
 
   invalidate(): void {

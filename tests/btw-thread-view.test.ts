@@ -115,7 +115,8 @@ test("PgUp/PgDn move cards regardless of editor contents", () => {
 
 test("a long answer under a small viewport shows scroll indicators and stays within width", () => {
   const longAnswer = Array.from({ length: 20 }, (_, i) => `line ${i}`).join("\n");
-  // rows=18 -> contentBudget = 18 - 2 (overlay) - 3 (empty editor) - 2 (spacer + footer) = 11,
+  // rows=18 -> box height clamps to MIN_HEIGHT (12, since round(18*0.6)=11 < 12),
+  // so contentBudget = (12 - 2) - 3 (empty editor) - 2 (spacer + footer) = 5,
   // well short of the 23 content rows (question + blank + "btw" + 20 answer lines),
   // so the scroll indicators have room to appear.
   const view = createView([entry("e1", "q", longAnswer)], 18);
@@ -134,11 +135,12 @@ test("a long answer under a small viewport shows scroll indicators and stays wit
 });
 
 test("a card whose content exactly fills the budget shows no scroll indicator and reveals the last line", () => {
-  // rows=13 -> contentBudget = 13 - 2 (overlay) - 3 (empty editor) - 2 (spacer + footer) = 6.
+  // rows=22 -> box height = min(22, max(12, round(22*0.6)=13)) = 13,
+  // contentBudget = (13 - 2) - 3 (empty editor) - 2 (spacer + footer) = 6.
   // question + blank + "btw" label + 3 answer lines = exactly 6 content rows --
   // no truncation, so no "↓ more" and the last answer line ("line 2") must be visible.
   const answer = Array.from({ length: 3 }, (_, i) => `line ${i}`).join("\n");
-  const out = plain(render([entry("e1", "q", answer)], 50, 13)).split("\n");
+  const out = plain(render([entry("e1", "q", answer)], 50, 22)).split("\n");
   assert.ok(!out.some((line) => line.includes("↓ more")));
   assert.ok(out.some((line) => line.includes("line 2")));
 });
@@ -255,7 +257,8 @@ test("setThread with the same id/length keeps the cursor on the pending card", (
 });
 
 test("a tiny viewport still shows the current card's question line", () => {
-  // rows=7 -> contentBudget = max(1, 7 - 2 (overlay) - 3 (empty editor) - 2 (spacer + footer)) = 1:
+  // rows=7 -> box height = min(7, max(12, round(7*0.6))) = 7 (below MIN_HEIGHT, so
+  // it isn't clamped up), contentBudget = max(1, (7 - 2) - 3 (empty editor) - 2 (spacer + footer)) = 1:
   // only the first content row survives, and it must be the question line.
   const view = createView([entry("e1", "question here", "answer here")], 7);
   const out = plain(view.render(60)).split("\n");
@@ -370,4 +373,18 @@ test("the editor and footer are always shown, even under a small viewport", () =
   assert.ok(editorTop.includes("─"));
   assert.ok(editorBottom.includes("─"));
   assert.ok(linesWithinWidth(lines, 90));
+});
+
+test("the overlay height is constant regardless of card content", () => {
+  // rows=40 -> box height = min(40, max(12, round(40*0.6))) = 24, innerH = 22:
+  // an empty thread, a 1-line answer, and a 40-line answer must all pad/scroll
+  // to exactly the same 22 rows, so paging never changes the box's height.
+  const empty = createView([]);
+  const short = createView([entry("e1", "q", "a single line answer")]);
+  const longAnswer = Array.from({ length: 40 }, (_, i) => `line ${i}`).join("\n");
+  const long = createView([entry("e1", "q", longAnswer)]);
+
+  assert.equal(empty.render(60).length, 22);
+  assert.equal(short.render(60).length, 22);
+  assert.equal(long.render(60).length, 22);
 });

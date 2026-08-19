@@ -36,7 +36,8 @@ pi update --extension npm:pi-btw-extension
 ## Usage
 
 The overlay shows one question/answer card at a time, not a scrollback; `←`/`→` step between
-questions.
+questions. The overlay keeps a fixed height (60% of the terminal, minimum 12 rows); shorter cards
+leave empty space and longer cards scroll inside.
 
 | Key or command | Action |
 |---|---|
