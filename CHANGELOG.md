@@ -5,6 +5,34 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-08-19
+
+### Changed
+
+- The input line is now pi-tui's `Editor` — the same multi-line editor as pi's
+  main input: Enter submits, `\`+Enter (or Shift+Enter where the terminal
+  supports it) inserts a newline, and paste/undo work. Arrow keys move between
+  cards or scroll only while the input is empty; with text they belong to the
+  editor.
+- The overlay frame's title now carries the thread position (`btw · ‹ 2/3 ›`),
+  replacing the inner header row.
+- The busy spinner is pi-tui's `Loader`, matching pi core's accent-spinner /
+  muted-message convention.
+- The footer follows pi core's key-hint convention (dim key + muted
+  description, `^p`-style short keys) and truncates with an ellipsis instead
+  of cutting off mid-word.
+- The overlay renders without a background fill, so it blends with any theme;
+  the editor's rules use the `border` token and a blank line separates card
+  content from the input area.
+- Cards use a `❯ question` line and a lowercase `btw` label instead of
+  `YOU`/`BTW` blocks; `✓ shared to main` is colored as success.
+
+### Removed
+
+- The thread list (`Ctrl+L`), new-thread (`Ctrl+N`), and thread-delete UI.
+  The overlay always continues the active thread; stored threads and session
+  replay are unaffected.
+
 ## [0.3.0] - 2026-08-18
 
 ### Changed
